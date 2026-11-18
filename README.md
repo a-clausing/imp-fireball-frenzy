@@ -31,9 +31,11 @@ Tests cover reflection math, wall/ceiling/enemy bounces, anti-tunneling at extre
 
 ## Deploy to GitHub Pages
 
-1. Push this folder to a GitHub repository (the repo root should contain `index.html`).
-2. Go to **Settings → Pages**, choose **Deploy from a branch**, pick `main` and `/ (root)`, then save.
-3. The game will be live at `https://<user>.github.io/<repo>/` within a minute or two.
+This repo deploys automatically with GitHub Actions (`.github/workflows/pages.yml`):
+
+1. In **Settings → Pages**, set Source to **GitHub Actions** (one-time).
+2. Every push to `main` runs the test suite, then publishes `index.html`, `styles.css`, `src/` and `assets/`.
+3. Live at `https://<user>.github.io/<repo>/`. If the tests fail, the deploy is skipped and the previous version stays up.
 
 `dist/`, `node_modules/`, `tests/` and `build.mjs` aren't needed at runtime, so you can leave them out of the deployed repo. `index.html`, `styles.css`, `src/` and `assets/` are what matter.
 
