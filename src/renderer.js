@@ -192,7 +192,7 @@ export class Renderer {
       const s = this.enemySprite(e.type, e.r);
       const since = sim.time - e.lastHit;
       const hit = since < 0.12 ? 1 - since / 0.12 : 0;
-      const bob = Math.sin(t * 2.2 + e.id * 1.7) * 1.2;
+      const bob = Math.sin(t * 2.2 + e.id * 1.7) * 0.5;
       const sq = 1 + hit * 0.12;
       ctx.save();
       ctx.translate(e.x, e.y + bob);
@@ -230,15 +230,15 @@ export class Renderer {
 
     // returning fireballs sliding to the new launch spot
     ctx.globalCompositeOperation = 'lighter';
-    for (const r of sim.returning) this._drawBall(ctx, r.x, CONFIG.FLOOR_Y - CONFIG.BALL_R, 0, 0, 'normal', false);
+    for (const r of sim.returning) this._drawBall(ctx, r.x, CONFIG.FLOOR_Y - CONFIG.BALL_R, null, 'normal', false);
     // fireballs
     const many = sim.balls.length > CONFIG.MAX_ACTIVE_TRAILS;
     for (let i = 0; i < sim.balls.length; i++) {
       const b = sim.balls[i];
-      const x = b.prevX + (b.x - b.prevX) * alpha;
-      const y = b.prevY + (b.y - b.prevY) * alpha;
       const kind = b.pierce && b.inferno ? 'both' : b.pierce ? 'pierce' : b.inferno ? 'inferno' : 'normal';
-      this._drawBall(ctx, x, y, b.vx, b.vy, kind, !many || i < CONFIG.MAX_ACTIVE_TRAILS, b.inferno);
+      const withTrail = !many || i < CONFIG.MAX_ACTIVE_TRAILS;
+      const { x, y, path } = this._ballPose(b, alpha, withTrail);
+      this._drawBall(ctx, x, y, path, kind, b.inferno);
     }
     ctx.globalCompositeOperation = 'source-over';
 
@@ -266,18 +266,61 @@ export class Renderer {
     ctx.restore();
   }
 
-  _drawBall(ctx, x, y, vx, vy, kind, trail, big) {
+  /**
+   * Interpolated position that follows the TRUE path within the last physics
+   * step (prev -> bounce point(s) -> current), so balls visibly touch what they
+   * bounce off instead of cutting the corner. Also returns the trail polyline
+   * (points behind the ball, newest first) built from real past positions.
+   */
+  _ballPose(b, alpha, withTrail) {
+    const c = b.contacts || [];
+    let px = b.prevX, py = b.prevY, pt = 0, x = b.x, y = b.y, seg = c.length;
+    for (let i = 0; i < c.length; i += 3) {
+      const t = c[i + 2];
+      if (alpha <= t) {
+        const k = t > pt ? (alpha - pt) / (t - pt) : 1;
+        x = px + (c[i] - px) * k; y = py + (c[i + 1] - py) * k; seg = i;
+        break;
+      }
+      px = c[i]; py = c[i + 1]; pt = t;
+    }
+    if (seg === c.length) {
+      const k = pt < 1 ? (alpha - pt) / (1 - pt) : 1;
+      x = px + (b.x - px) * k; y = py + (b.y - py) * k;
+    }
+    if (!withTrail) return { x, y, path: null };
+    // points behind the head: this step's bounces already passed, prev pos, older history
+    const path = [];
+    for (let i = seg - 3; i >= 0; i -= 3) path.push(c[i], c[i + 1]);
+    path.push(b.prevX, b.prevY);
+    const tr = b.trail || [];
+    const skip = c.length / 3 + 1; // entries added during the current step
+    for (let i = tr.length - 2 * (skip + 1); i >= 0; i -= 2) path.push(tr[i], tr[i + 1]);
+    return { x, y, path };
+  }
+
+  _drawBall(ctx, x, y, path, kind, big) {
     const g = this.glow[kind];
     const r = CONFIG.BALL_R * (big ? 1.25 : 1);
     const S = r * 5.2;
-    if (trail && (vx || vy)) {
-      const sp = Math.hypot(vx, vy) || 1;
-      const ux = vx / sp, uy = vy / sp;
-      for (let k = 3; k >= 1; k--) {
-        const d = k * r * 1.5;
-        const s = S * (1 - k * 0.2);
-        ctx.globalAlpha = 0.45 - k * 0.11;
-        ctx.drawImage(g, x - ux * d - s / 2, y - uy * d - s / 2, s, s);
+    if (path && path.length) {
+      // walk back along the real path, placing fading glow puffs
+      const spacing = r * 1.3, maxLen = r * 4.2;
+      let hx = x, hy = y, dist = 0, next = spacing, i = 0;
+      while (i < path.length && next <= maxLen) {
+        const ax = path[i], ay = path[i + 1];
+        const segLen = Math.hypot(ax - hx, ay - hy);
+        if (dist + segLen >= next && segLen > 0) {
+          const k = (next - dist) / segLen;
+          const tx = hx + (ax - hx) * k, ty = hy + (ay - hy) * k;
+          const f = 1 - next / (maxLen + spacing);
+          const s = S * (0.45 + 0.4 * f);
+          ctx.globalAlpha = 0.5 * f;
+          ctx.drawImage(g, tx - s / 2, ty - s / 2, s, s);
+          next += spacing;
+        } else {
+          dist += segLen; hx = ax; hy = ay; i += 2;
+        }
       }
       ctx.globalAlpha = 1;
     }

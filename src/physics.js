@@ -113,6 +113,7 @@ export function stepBall(ball, dt, world) {
       world.onFloor && world.onFloor(ball);
       return true;
     }
+    if (ball.contacts) ball.contacts.push(ball.x, ball.y, 1 - remaining / dt);
     if (hit.kind === 'enemy') {
       const e = hit.enemy;
       // positional correction: never leave the ball inside an enemy
@@ -120,7 +121,6 @@ export function stepBall(ball, dt, world) {
       ball.x = e.x + hit.nx * R;
       ball.y = e.y + hit.ny * R;
       [ball.vx, ball.vy] = reflect(ball.vx, ball.vy, hit.nx, hit.ny);
-      [ball.vx, ball.vy] = enforceMinVertical(ball.vx, ball.vy, hit.nx, hit.ny);
       world.onEnemyHit && world.onEnemyHit(ball, e, ball.x - hit.nx * br, ball.y - hit.ny * br);
     } else {
       [ball.vx, ball.vy] = reflect(ball.vx, ball.vy, hit.nx, hit.ny);
@@ -186,7 +186,6 @@ export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PR
       const e = hit.enemy, R = e.r + br + 0.01;
       x = e.x + hit.nx * R; y = e.y + hit.ny * R;
       [vx, vy] = reflect(vx, vy, hit.nx, hit.ny);
-      [vx, vy] = enforceMinVertical(vx, vy, hit.nx, hit.ny);
     } else {
       [vx, vy] = reflect(vx, vy, hit.nx, hit.ny);
       if (hit.kind === 'wall') [vx, vy] = enforceMinVertical(vx, vy, hit.nx, hit.ny);

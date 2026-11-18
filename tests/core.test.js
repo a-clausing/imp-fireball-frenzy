@@ -368,3 +368,39 @@ test('point aiming: aims at the finger, clamps, cancels below launch point', asy
   // pull-back still works: dragging down aims up
   assert.ok(Math.abs(angleFromDrag(0, 50) - Math.PI / 2) < 1e-9);
 });
+
+test('demon bounces are exact mirror reflections (no hidden steering)', () => {
+  // a glancing hit that sends the ball almost horizontal must not be bent
+  for (const off of [-22, -18, -12, 12, 18, 22]) {
+    const e = createEnemy(1, 'brute', 180, 300, 1e9);
+    const w = world([e]);
+    const b = ball(180 + off, 560, 0, -760);
+    let before = null;
+    w.onEnemyHit = (bb) => { before = [bb.vx, bb.vy, bb.x, bb.y]; };
+    for (let i = 0; i < 60 && !before; i++) stepBall(b, DT, w);
+    const nx = (before[2] - e.x), ny = (before[3] - e.y), L = Math.hypot(nx, ny);
+    const [ex, ey] = reflect(0, -760, nx / L, ny / L);
+    assert.ok(Math.abs(before[0] - ex) < 1e-6 && Math.abs(before[1] - ey) < 1e-6, 'pure reflection at offset ' + off);
+  }
+});
+
+test('preview matches real fireballs across many angles and formations', () => {
+  let worst = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = new Simulation(); s.newRun(seed);
+    for (let k = 0; k < 6; k++) { s._endVolley(); runUntil(s, () => s.phase !== 'advance'); if (s.phase === 'over') break; }
+    for (let a = 12; a <= 168; a += 6.1) {
+      const ang = a * D2R, y0 = CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5;
+      const pts = predictPath(s.launchX, y0, ang, s.enemies, false, 3, 5000);
+      const w = world(s.enemies.map((e) => ({ ...e, hp: 1e9 })));
+      const hits = [];
+      w.onEnemyHit = (b) => hits.push([b.x, b.y]); w.onWall = (b) => hits.push([b.x, b.y]); w.onFloor = () => {};
+      const b = ball(s.launchX, y0, Math.cos(ang) * CONFIG.BALL_SPEED, -Math.sin(ang) * CONFIG.BALL_SPEED);
+      for (let i = 0; i < 20000 && hits.length < pts.length - 1; i++) if (stepBall(b, DT, w)) break;
+      for (let i = 0; i < Math.min(hits.length, pts.length - 2); i++) {
+        worst = Math.max(worst, Math.hypot(pts[i + 1][0] - hits[i][0], pts[i + 1][1] - hits[i][1]));
+      }
+    }
+  }
+  assert.ok(worst < 0.5, 'worst preview error ' + worst);
+});

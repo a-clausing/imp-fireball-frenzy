@@ -127,6 +127,7 @@ export class Simulation {
       r: CONFIG.BALL_R, damage: dmg,
       pierce: this.power.active.pierce, inferno: this.power.active.inferno,
       overlaps: new Set(), active: true,
+      contacts: [], trail: [],
     };
     b.prevX = b.x; b.prevY = b.y;
     this.balls.push(b);
@@ -140,7 +141,13 @@ export class Simulation {
     for (let i = 0; i < this.balls.length; i++) {
       const b = this.balls[i];
       b.prevX = b.x; b.prevY = b.y;
+      b.contacts.length = 0;
       if (stepBall(b, dt, this)) b.active = false;
+      // render-only history of true positions (incl. bounce points) for trails
+      const tr = b.trail;
+      for (let c = 0; c < b.contacts.length; c += 3) tr.push(b.contacts[c], b.contacts[c + 1]);
+      tr.push(b.x, b.y);
+      if (tr.length > 16) tr.splice(0, tr.length - 16);
       if (this.killQueue.length) this._processKills();
     }
     if (this.balls.some((b) => !b.active)) {

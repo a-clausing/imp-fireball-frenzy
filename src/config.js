@@ -16,7 +16,7 @@ export const CONFIG = {
   BALL_R: 6,
   BALL_SPEED: 760,     // logical units / second
   BASE_DAMAGE: 1,
-  MIN_VY_RATIO: 0.14,  // prevents near-horizontal endless bouncing
+  MIN_VY_RATIO: 0.07,  // side-wall bounces only: stops near-horizontal endless loops (~4°)
   MAX_COLLISION_ITERS: 12,
 
   // ---- Simulation ----
