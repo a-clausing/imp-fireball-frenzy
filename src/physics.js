@@ -170,7 +170,7 @@ function updatePierceOverlaps(ball, enemies) {
  * Predict the path of a shot for the aiming guide. Uses exactly the same
  * findFirstHit / reflect / enforceMinVertical as real fireballs.
  */
-export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PREVIEW_BOUNCES, maxLen = CONFIG.PREVIEW_LENGTH) {
+export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PREVIEW_BOUNCES, maxLen = CONFIG.PREVIEW_LENGTH, stopAtEnemy = false) {
   const pts = [[x, y]];
   pts.hits = []; // enemy (or null for walls) at each bounce point pts[i+1]
   let vx = Math.cos(angle), vy = -Math.sin(angle);
@@ -184,6 +184,7 @@ export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PR
     pts.push([x, y]);
     pts.hits.push(hit && hit.kind === 'enemy' ? hit.enemy : null);
     if (!hit || hit.kind === 'floor') break;
+    if (stopAtEnemy && hit.kind === 'enemy') break;
     if (hit.kind === 'enemy') {
       const e = hit.enemy, R = e.r + br + 0.01;
       x = e.x + hit.nx * R; y = e.y + hit.ny * R;

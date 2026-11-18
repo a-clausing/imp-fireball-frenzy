@@ -243,14 +243,6 @@ export class Renderer {
     ctx.globalCompositeOperation = 'source-over';
 
     this._drawFx(ctx, fx);
-    if (game.settings.hitboxes) {
-      ctx.save(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(80,255,120,0.85)';
-      for (const e of sim.enemies) { if (e.dead) continue; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.stroke(); }
-      for (const p of sim.pickups) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke(); }
-      ctx.strokeStyle = 'rgba(120,220,255,0.9)';
-      for (const b of sim.balls) { ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke(); }
-      ctx.restore();
-    }
     this._drawHealth(ctx, sim);
 
     if (fx.flash > 0) {
@@ -337,26 +329,16 @@ export class Renderer {
 
   _drawAim(ctx, sim, angle, t) {
     const pierce = sim.power.pending.pierce;
-    const ox = sim.launchX, oy = CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5;
-    const pts = predictPath(ox, oy, angle, sim.enemies, pierce);
-    // If the first fireball will destroy the first demon it bounces off, the rest
-    // of the volley flies through the gap: show that path too (faint).
-    if (!pierce && sim.ballCount > 1 && pts.hits.length) {
-      const first = pts.hits.findIndex((h) => h);
-      const dmg = CONFIG.BASE_DAMAGE * (sim.power.pending.inferno ? 2 : 1);
-      if (first >= 0 && pts.hits[first].hp <= dmg) {
-        const gone = pts.hits[first];
-        const rest = predictPath(ox, oy, angle, sim.enemies.filter((e) => e !== gone), false);
-        let split = 0; // distance along the guide to the bounce off the doomed demon
-        for (let i = 1; i <= first + 1; i++) split += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-        this._dots(ctx, rest, t, '#ffffff', 0.5, 9, false, split - 2, 1.7);
-        // mark the demon that will break
-        ctx.save(); ctx.globalAlpha = 0.6 + 0.3 * Math.sin(t * 8);
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
-        ctx.beginPath(); ctx.arc(gone.x, gone.y, gone.r + 3, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-      }
-    }
+    // The guide shows the shot (including wall bounces) only until it first
+    // reaches a demon. Where it goes after that is up to the player to judge.
+    const pts = predictPath(sim.launchX, CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5, angle, sim.enemies, pierce,
+      CONFIG.PREVIEW_BOUNCES, CONFIG.PREVIEW_LENGTH, true);
     this._dots(ctx, pts, t, pierce ? '#e0b0ff' : '#ffc04a', 1, 11, true);
+    const last = pts[pts.length - 1];
+    if (pts.hits[pts.hits.length - 1]) { // ended on a demon: small impact spark
+      ctx.save(); ctx.globalAlpha = 0.95; ctx.fillStyle = '#fff2c0';
+      ctx.beginPath(); ctx.arc(last[0], last[1], 3.4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
   }
 
   _dots(ctx, pts, t, color, alphaMul, spacing, markBounces = false, startDist = 0, dotR = 2.3) {

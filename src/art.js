@@ -113,8 +113,8 @@ function horn(ctx, r, side, { len = 0.7, curl = 0.35, base = 0.28, color = '#2b1
 function ear(ctx, r, side, color) {
   ctx.beginPath();
   ctx.moveTo(side * r * 0.82, -r * 0.2);
-  ctx.lineTo(side * r * 1.16, -r * 0.42);
-  ctx.lineTo(side * r * 0.9, r * 0.15);
+  ctx.lineTo(side * r * 1.42, -r * 0.48);
+  ctx.lineTo(side * r * 0.9, r * 0.22);
   ctx.closePath();
   ctx.fillStyle = color;
   ctx.fill();
@@ -124,8 +124,7 @@ function ear(ctx, r, side, color) {
 export const ENEMY_ART = {
   ember(ctx, r) {
     ear(ctx, r, -1, '#d8401c'); ear(ctx, r, 1, '#d8401c');
-    horn(ctx, r, -1, { color: '#3a1a1a', len: 0.52, curl: 0.12, x: 0.42, y: -0.66 });
-    horn(ctx, r, 1, { color: '#3a1a1a', len: 0.52, curl: 0.12, x: 0.42, y: -0.66 });
+    horn(ctx, r, -1, { color: '#3a1a1a' }); horn(ctx, r, 1, { color: '#3a1a1a' });
     shadedCircle(ctx, r, '#ef5228', '#b8301a', '#ff9a6a');
     eyes(ctx, r);
     grin(ctx, r);
@@ -133,16 +132,16 @@ export const ENEMY_ART = {
   wisp(ctx, r) {
     const g = ctx.createLinearGradient(0, -r * 1.6, 0, r);
     g.addColorStop(0, '#e6fbff'); g.addColorStop(0.35, '#59c8ff'); g.addColorStop(1, '#1b5fd6');
-    flamePath(ctx, 0, r * 0.32, r * 0.97, r * 1.5, 3);
+    flamePath(ctx, 0, r * 0.25, r * 0.95, r * 1.65, 3);
     ctx.fillStyle = g; ctx.fill();
     outline(ctx, r * 0.13);
-    flamePath(ctx, 0, r * 0.4, r * 0.5, r * 0.85, 2);
+    flamePath(ctx, 0, r * 0.35, r * 0.5, r * 0.9, 2);
     ctx.fillStyle = 'rgba(230,252,255,0.75)'; ctx.fill();
     eyes(ctx, r, { y: 0.15, sep: 0.33, size: 0.2, color: '#ffffff', angry: false, pupil: '#0b1d4a' });
   },
   shadow(ctx, r) {
-    horn(ctx, r, -1, { len: 0.6, curl: 0.2, color: '#2a1a3a', base: 0.36, x: 0.42, y: -0.62 });
-    horn(ctx, r, 1, { len: 0.6, curl: 0.2, color: '#2a1a3a', base: 0.36, x: 0.42, y: -0.62 });
+    horn(ctx, r, -1, { len: 1.0, curl: 0.55, color: '#2a1a3a', base: 0.36 });
+    horn(ctx, r, 1, { len: 1.0, curl: 0.55, color: '#2a1a3a', base: 0.36 });
     ear(ctx, r, -1, '#7a35d0'); ear(ctx, r, 1, '#7a35d0');
     shadedCircle(ctx, r, '#8f45e8', '#5a24a8', '#c69bff');
     eyes(ctx, r, { color: '#ffd23a' });
@@ -190,7 +189,7 @@ export const ENEMY_ART = {
   scorchling(ctx, r, mini = false) {
     const g = ctx.createLinearGradient(0, -r * 1.5, 0, r);
     g.addColorStop(0, mini ? '#fff6a0' : '#ffe56a'); g.addColorStop(0.45, mini ? '#ffc23a' : '#ff9a1a'); g.addColorStop(1, mini ? '#ff7a10' : '#e84a10');
-    flamePath(ctx, 0, r * 0.3, r * 1.0, r * 1.48, 5);
+    flamePath(ctx, 0, r * 0.2, r * 1.0, r * 1.6, 5);
     ctx.fillStyle = g; ctx.fill();
     outline(ctx, r * 0.13);
     eyes(ctx, r, { y: 0.1, sep: 0.34, size: 0.19, color: '#fff', angry: true, pupil: '#2a0a00' });
@@ -201,9 +200,9 @@ export const ENEMY_ART = {
     // flame crown
     const g = ctx.createLinearGradient(0, -r * 1.7, 0, 0);
     g.addColorStop(0, '#ffe680'); g.addColorStop(1, '#ff3a1a');
-    flamePath(ctx, 0, -r * 0.2, r * 0.9, r * 1.02, 5);
+    flamePath(ctx, 0, -r * 0.35, r * 0.95, r * 1.35, 5);
     ctx.fillStyle = g; ctx.fill(); outline(ctx, r * 0.1);
-    horn(ctx, r, -1, { len: 0.5, color: '#1a0a0a', curl: 0.15, x: 0.5, y: -0.6 }); horn(ctx, r, 1, { len: 0.5, color: '#1a0a0a', curl: 0.15, x: 0.5, y: -0.6 });
+    horn(ctx, r, -1, { len: 0.75, color: '#1a0a0a', curl: 0.45 }); horn(ctx, r, 1, { len: 0.75, color: '#1a0a0a', curl: 0.45 });
     shadedCircle(ctx, r, '#d81e3c', '#8e0f26', '#ff7a8a');
     // glowing core rune
     ctx.save();

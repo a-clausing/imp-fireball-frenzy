@@ -411,3 +411,13 @@ test('preview reports which demon each bounce hits', () => {
   assert.equal(pts.hits[0], e);
   assert.equal(pts.hits.length, pts.length - 1);
 });
+
+test('aim guide can stop at the first demon contact (walls before it still shown)', () => {
+  const e = createEnemy(5, 'brute', 300, 200, 3);
+  const full = predictPath(180, 590, 60 * D2R, [e], false, 3, 3000);
+  const cut = predictPath(180, 590, 60 * D2R, [e], false, 3, 3000, true);
+  const k = full.hits.indexOf(e);
+  assert.ok(k >= 0, 'full path hits the demon');
+  assert.equal(cut.length, k + 2, 'stops exactly at the demon contact');
+  assert.deepEqual(cut[cut.length - 1], full[k + 1]);
+});
