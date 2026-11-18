@@ -243,6 +243,14 @@ export class Renderer {
     ctx.globalCompositeOperation = 'source-over';
 
     this._drawFx(ctx, fx);
+    if (game.settings.hitboxes) {
+      ctx.save(); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(80,255,120,0.85)';
+      for (const e of sim.enemies) { if (e.dead) continue; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.stroke(); }
+      for (const p of sim.pickups) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(120,220,255,0.9)';
+      for (const b of sim.balls) { ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.restore();
+    }
     this._drawHealth(ctx, sim);
 
     if (fx.flash > 0) {
@@ -329,9 +337,29 @@ export class Renderer {
 
   _drawAim(ctx, sim, angle, t) {
     const pierce = sim.power.pending.pierce;
-    const pts = predictPath(sim.launchX, CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5, angle, sim.enemies, pierce);
-    // dotted guide along the polyline
-    const spacing = 11;
+    const ox = sim.launchX, oy = CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5;
+    const pts = predictPath(ox, oy, angle, sim.enemies, pierce);
+    // If the first fireball will destroy the first demon it bounces off, the rest
+    // of the volley flies through the gap: show that path too (faint).
+    if (!pierce && sim.ballCount > 1 && pts.hits.length) {
+      const first = pts.hits.findIndex((h) => h);
+      const dmg = CONFIG.BASE_DAMAGE * (sim.power.pending.inferno ? 2 : 1);
+      if (first >= 0 && pts.hits[first].hp <= dmg) {
+        const gone = pts.hits[first];
+        const rest = predictPath(ox, oy, angle, sim.enemies.filter((e) => e !== gone), false);
+        let split = 0; // distance along the guide to the bounce off the doomed demon
+        for (let i = 1; i <= first + 1; i++) split += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+        this._dots(ctx, rest, t, '#ffffff', 0.5, 9, false, split - 2, 1.7);
+        // mark the demon that will break
+        ctx.save(); ctx.globalAlpha = 0.6 + 0.3 * Math.sin(t * 8);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.arc(gone.x, gone.y, gone.r + 3, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+    }
+    this._dots(ctx, pts, t, pierce ? '#e0b0ff' : '#ffc04a', 1, 11, true);
+  }
+
+  _dots(ctx, pts, t, color, alphaMul, spacing, markBounces = false, startDist = 0, dotR = 2.3) {
     let carry = (t * 30) % spacing;
     let total = 0;
     ctx.save();
@@ -339,14 +367,15 @@ export class Renderer {
       const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
       const len = Math.hypot(bx - ax, by - ay);
       for (let d = carry; d < len; d += spacing) {
+        if (total + d < startDist) continue;
         const f = Math.max(0.15, 1 - (total + d) / CONFIG.PREVIEW_LENGTH);
-        ctx.globalAlpha = f;
-        ctx.fillStyle = pierce ? '#e0b0ff' : '#ffc04a';
-        ctx.beginPath(); ctx.arc(ax + (bx - ax) * d / len, ay + (by - ay) * d / len, 2.3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = f * alphaMul;
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(ax + (bx - ax) * d / len, ay + (by - ay) * d / len, dotR, 0, Math.PI * 2); ctx.fill();
       }
       carry = (carry - len % spacing + spacing) % spacing;
       total += len;
-      if (i < pts.length - 1) {
+      if (markBounces && i < pts.length - 1) {
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = '#fff2c0';
         ctx.beginPath(); ctx.arc(bx, by, 3.2, 0, Math.PI * 2); ctx.fill();

@@ -63,7 +63,7 @@ export class SaveManager {
   resetBest() { this._del(KEY_BEST); }
 
   loadSettings() {
-    const def = { sound: true, music: true, shake: true, preview: true, pullback: false };
+    const def = { sound: true, music: true, shake: true, preview: true, pullback: false, hitboxes: false };
     try { return { ...def, ...(JSON.parse(this._get(KEY_SETTINGS) || '{}')) }; } catch { return def; }
   }
   saveSettings(s) { this._set(KEY_SETTINGS, JSON.stringify(s)); }

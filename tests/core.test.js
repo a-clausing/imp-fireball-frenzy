@@ -404,3 +404,10 @@ test('preview matches real fireballs across many angles and formations', () => {
   }
   assert.ok(worst < 0.5, 'worst preview error ' + worst);
 });
+
+test('preview reports which demon each bounce hits', () => {
+  const e = createEnemy(5, 'brute', 180, 200, 3);
+  const pts = predictPath(180, 590, Math.PI / 2, [e], false, 2, 2000);
+  assert.equal(pts.hits[0], e);
+  assert.equal(pts.hits.length, pts.length - 1);
+});

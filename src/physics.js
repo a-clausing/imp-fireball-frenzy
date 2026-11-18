@@ -172,6 +172,7 @@ function updatePierceOverlaps(ball, enemies) {
  */
 export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PREVIEW_BOUNCES, maxLen = CONFIG.PREVIEW_LENGTH) {
   const pts = [[x, y]];
+  pts.hits = []; // enemy (or null for walls) at each bounce point pts[i+1]
   let vx = Math.cos(angle), vy = -Math.sin(angle);
   let len = 0, bounces = 0;
   const br = CONFIG.BALL_R;
@@ -181,6 +182,7 @@ export function predictPath(x, y, angle, enemies, pierce, maxBounces = CONFIG.PR
     const t = hit ? hit.t : maxLen - len;
     x += vx * t; y += vy * t; len += t;
     pts.push([x, y]);
+    pts.hits.push(hit && hit.kind === 'enemy' ? hit.enemy : null);
     if (!hit || hit.kind === 'floor') break;
     if (hit.kind === 'enemy') {
       const e = hit.enemy, R = e.r + br + 0.01;
