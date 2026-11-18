@@ -206,7 +206,14 @@ export class Renderer {
       ctx.restore();
     }
 
-    // aim guide
+    // aim guide (or cancel hint when the finger is below Imp)
+    if (game.aim && game.aim.cancel && sim.phase === 'aim') {
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '800 13px "Avenir Next", "Arial Black", system-ui, sans-serif';
+      ctx.lineWidth = 3; ctx.strokeStyle = '#1a0710'; ctx.fillStyle = '#ffb0a0';
+      ctx.strokeText('RELEASE TO CANCEL', W / 2, CONFIG.DANGER_Y - 18);
+      ctx.fillText('RELEASE TO CANCEL', W / 2, CONFIG.DANGER_Y - 18);
+    }
     if (game.aim && game.aim.valid && sim.phase === 'aim' && game.settings.preview) this._drawAim(ctx, sim, game.aim.angle, t);
 
     // imp

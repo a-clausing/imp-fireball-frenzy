@@ -35,7 +35,9 @@ export const CONFIG = {
   // ---- Aiming ----
   MIN_ANGLE_DEG: 10,
   MAX_ANGLE_DEG: 170,
-  AIM_MIN_DRAG: 20,            // CSS pixels before an aim counts
+  AIM_MIN_DRAG: 12,            // CSS pixels of movement that make a gesture deliberate
+  AIM_MIN_HOLD: 0.2,           // ...or a hold this long (seconds) in point mode
+  AIM_CANCEL_MARGIN: 14,       // point mode: finger must be this far above the launch point
   PREVIEW_BOUNCES: 3,
   PREVIEW_LENGTH: 820,
 

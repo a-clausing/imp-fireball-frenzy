@@ -356,3 +356,15 @@ test('restart fully resets run state', () => {
   assert.deepEqual(s.power.pending, { pierce: false, inferno: false });
   assert.equal(s.launchX, CONFIG.START_X);
 });
+
+test('point aiming: aims at the finger, clamps, cancels below launch point', async () => {
+  const { angleFromPoint, angleFromDrag } = await import('../src/input.js');
+  const ox = 180, oy = 600;
+  assert.ok(Math.abs(angleFromPoint(ox, oy, 180, 300) - Math.PI / 2) < 1e-9, 'straight up');
+  assert.ok(Math.abs(angleFromPoint(ox, oy, 480, 300) - Math.PI / 4) < 1e-9, '45 degrees right');
+  assert.equal(angleFromPoint(ox, oy, 100, 595), null, 'below launch height cancels');
+  const shallow = angleFromPoint(ox, oy, 360, oy - 20);
+  assert.ok(Math.abs(shallow - 10 * D2R) < 1e-9, 'clamped to 10 degrees');
+  // pull-back still works: dragging down aims up
+  assert.ok(Math.abs(angleFromDrag(0, 50) - Math.PI / 2) < 1e-9);
+});

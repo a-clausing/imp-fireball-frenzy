@@ -240,6 +240,12 @@ class Game {
       canAim: () => this.state === 'playing' && this.sim && this.sim.canAim(),
       onFire: (a) => this.fire(a),
       onAimChange: (a) => { this.aim = a; },
+      mode: () => (this.settings.pullback ? 'pull' : 'point'),
+      origin: () => [this.sim.launchX, CONFIG.FLOOR_Y - CONFIG.BALL_R - 0.5],
+      toLogical: (cx, cy) => {
+        const r = $('#arena').getBoundingClientRect();
+        return [((cx - r.left) / r.width) * CONFIG.W, ((cy - r.top) / r.height) * CONFIG.H];
+      },
     });
     this._bindGlobal();
     this.layout();
