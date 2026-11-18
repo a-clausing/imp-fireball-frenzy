@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#140a1e">
+<title>Imp: Fireball Frenzy</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%23ff6a1a%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="bgfx"></canvas>
+<div id="app">
+  <!-- ===== GAME SCREEN ===== -->
+  <section id="game" class="screen">
+    <header id="hud">
+      <div class="hud-box"><span class="lbl">SCORE</span><span id="hud-score" class="val">0</span></div>
+      <div class="hud-box sm"><span class="lbl">BEST</span><span id="hud-best" class="val">0</span></div>
+      <div class="hud-box sm"><span class="lbl">WAVE</span><span id="hud-wave" class="val">1</span></div>
+      <button id="btn-pause" class="hud-btn" aria-label="Pause"><span></span><span></span></button>
+    </header>
+    <div id="stage">
+      <canvas id="arena"></canvas>
+      <div id="combo" class="combo"></div>
+      <button id="btn-ff" class="ff hidden" aria-label="Fast forward">▶▶</button>
+    </div>
+    <footer id="bottombar">
+      <div class="pill"><i class="fb-icon"></i><span>×</span><span id="hud-balls">1</span></div>
+      <div id="hud-power" class="powers">
+        <div id="pw-pierce" class="pw pierce off" title="Piercing Shot"><canvas width="64" height="64"></canvas><b>NEXT</b></div>
+        <div id="pw-inferno" class="pw inferno off" title="Inferno Shot"><canvas width="64" height="64"></canvas><b>NEXT</b></div>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ===== MAIN MENU ===== -->
+  <section id="menu" class="screen overlay menu">
+    <div class="menu-inner">
+      <h1 class="title"><span class="t1">IMP</span><span class="t2">FIREBALL</span><span class="t3">FRENZY</span></h1>
+      <canvas id="menu-imp" class="menu-imp"></canvas>
+      <div class="btns">
+        <button class="btn green big" data-act="play">PLAY</button>
+        <button class="btn slate" data-act="continue" id="btn-continue">CONTINUE</button>
+        <button class="btn slate" data-act="howto">HOW TO PLAY</button>
+        <button class="btn slate" data-act="settings">SETTINGS</button>
+      </div>
+      <div class="plaque"><span>HIGH SCORE</span><b id="menu-best">0</b></div>
+    </div>
+  </section>
+
+  <!-- ===== HOW TO PLAY ===== -->
+  <section id="howto" class="screen overlay panel-screen">
+    <div class="panel tall">
+      <h2 class="banner">HOW TO PLAY</h2>
+      <div class="scroll">
+        <div class="row"><div class="ic" data-icon="aim"></div><div><h3>AIM &amp; FIRE</h3><p>Touch anywhere, pull back like a slingshot, release to launch your fireballs.</p></div></div>
+        <div class="row"><div class="ic" data-icon="brute"></div><div><h3>RICOCHET</h3><p>Fireballs bounce off walls and creatures, dealing 1 damage per hit.</p></div></div>
+        <div class="row"><div class="ic" data-icon="ball"></div><div><h3>COLLECT</h3><p>Hit +1 orbs to add a fireball to your next volley. Your first returning fireball sets where Imp throws from next.</p></div></div>
+        <div class="row"><div class="ic" data-icon="powers"></div><div><h3>POWER-UPS</h3><p><b class="pur">Piercing Shot</b> – pass through enemies (next volley).<br><b class="red">Inferno Shot</b> – double damage (next volley).</p></div></div>
+        <div class="row"><div class="ic" data-icon="special"></div><div><h3>SPECIAL DEMONS</h3><p>Scorchlings split in two. Infernal Imps explode and can set off chain reactions.</p></div></div>
+        <div class="row"><div class="ic" data-icon="survive"></div><div><h3>SURVIVE</h3><p>Destroy several demons in one volley for combo multipliers. Don't let any reach the red line!</p></div></div>
+      </div>
+      <button class="btn green" data-act="back">BACK</button>
+    </div>
+  </section>
+
+  <!-- ===== SETTINGS ===== -->
+  <section id="settings" class="screen overlay panel-screen">
+    <div class="panel">
+      <h2 class="banner">SETTINGS</h2>
+      <label class="toggle"><span>Sound effects</span><input type="checkbox" data-set="sound"><i></i></label>
+      <label class="toggle"><span>Music</span><input type="checkbox" data-set="music"><i></i></label>
+      <label class="toggle"><span>Screen shake</span><input type="checkbox" data-set="shake"><i></i></label>
+      <label class="toggle"><span>Aim guide</span><input type="checkbox" data-set="preview"><i></i></label>
+      <button class="btn slate small" data-act="resetbest">RESET HIGH SCORE</button>
+      <button class="btn green" data-act="back">BACK</button>
+    </div>
+  </section>
+
+  <!-- ===== PAUSE ===== -->
+  <section id="pause" class="screen overlay panel-screen dim">
+    <div class="panel">
+      <h2 class="banner">PAUSED</h2>
+      <button class="btn green" data-act="resume">RESUME</button>
+      <button class="btn slate" data-act="restart">RESTART</button>
+      <button class="btn slate" data-act="settings">SETTINGS</button>
+      <button class="btn slate" data-act="menu">MAIN MENU</button>
+      <p class="note">Your run is saved automatically at the start of every turn.</p>
+    </div>
+  </section>
+
+  <!-- ===== CONFIRM ===== -->
+  <section id="confirm" class="screen overlay panel-screen dim">
+    <div class="panel">
+      <h2 class="banner small">ARE YOU SURE?</h2>
+      <p id="confirm-text" class="confirm-text"></p>
+      <button class="btn red" data-act="yes">YES</button>
+      <button class="btn slate" data-act="no">CANCEL</button>
+    </div>
+  </section>
+
+  <!-- ===== GAME OVER ===== -->
+  <section id="gameover" class="screen overlay panel-screen dim">
+    <div class="go-inner">
+      <h1 class="go-title">GAME OVER</h1>
+      <canvas id="go-imp" class="go-imp"></canvas>
+      <div class="panel stats">
+        <span class="lbl">SCORE</span><b id="go-score" class="big-num">0</b>
+        <span class="lbl">WAVE REACHED</span><b id="go-wave" class="mid-num">1</b>
+        <div id="go-new" class="newhs hidden">NEW HIGH SCORE!</div>
+        <span class="lbl">BEST SCORE</span><b id="go-best" class="mid-num white">0</b>
+      </div>
+      <button class="btn green big" data-act="again">↻ PLAY AGAIN</button>
+      <button class="btn slate" data-act="menu">⌂ MAIN MENU</button>
+    </div>
+  </section>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
